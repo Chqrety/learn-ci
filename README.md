@@ -1,10 +1,11 @@
 # 🚀 Capstone Project: Pemrograman Web Lanjut
 
-![CodeIgniter](https://img.shields.io/badge/Framework-CodeIgniter_4.7-EF4423?style=for-the-badge&logo=codeigniter&logoColor=white)
+![CodeIgniter](https://img.shields.io/badge/Framework-CodeIgniter_4.5-EF4423?style=for-the-badge&logo=codeigniter&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Development-green?style=for-the-badge)
+![Bootstrap](https://img.shields.io/badge/UI_Theme-NiceAdmin-5f3fef?style=for-the-badge&logo=bootstrap&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Capstone_4_Completed-green?style=for-the-badge)
 
-Proyek ini dikembangkan sebagai tugas **Capstone** untuk mata kuliah **Pemrograman Web Lanjut**. Aplikasi ini mengimplementasikan pola desain **MVC (Model-View-Controller)** menggunakan framework CodeIgniter 4 untuk menciptakan struktur kode yang bersih dan terorganisir.
+Proyek ini adalah tahap **Capstone 4** untuk mata kuliah Pemrograman Web Lanjut. Fokus utama pada tahap ini adalah implementasi **Advanced Layouting** menggunakan template NiceAdmin dan pembuatan sistem **Authentication UI**.
 
 ---
 
@@ -13,51 +14,49 @@ Proyek ini dikembangkan sebagai tugas **Capstone** untuk mata kuliah **Pemrogram
 - **Nama:** Husnul Fikri Averus
 - **Institusi:** Universitas Dian Nuswantoro (UDINUS)
 - **Program Studi:** Teknik Informatika
-- **Tujuan:** Implementasi Konsep MVC dan PHP Framework.
+- **Role:** Creative Media @ GDGoC UDINUS | Kandidat Ketum Doscom 26/27
 
 ---
 
-## 🛠️ Stack Teknologi
+## 🛠️ Fitur Utama (Capstone 4 Update)
 
-| Komponen      | Teknologi   | Versi  |
-| :------------ | :---------- | :----- |
-| **Bahasa**    | PHP         | ^8.2   |
-| **Framework** | CodeIgniter | 4.7    |
-| **Tooling**   | Composer    | Latest |
+- **Master Layouting:** Menggunakan `renderSection` dan `include` untuk memisahkan komponen _Header_, _Sidebar_, dan _Footer_.
+- **Multi-Layout System:** \* `layout.php`: Untuk halaman dashboard/utama (dengan navigasi).
+  - `layout_clear.php`: Khusus halaman autentikasi (Login/Register).
+- **Authentication UI:** Implementasi halaman login yang terintegrasi dengan template NiceAdmin.
+- **Dynamic Title:** Penamaan title halaman otomatis berdasarkan segmen URL menggunakan `uri_string()`.
+- **Datatables Integration:** Implementasi tabel dinamis dengan fitur _search_ dan _paging_ yang sudah ter-styling.
 
 ---
 
 ## 🛤️ Daftar Routes & Navigasi
 
-Aplikasi telah dikonfigurasi dengan beberapa rute utama untuk menangani request user:
+Aplikasi telah dikonfigurasi dengan rute-rute berikut:
 
-| Method  | Endpoint     | Controller                   | View              | Deskripsi                                    |
-| :------ | :----------- | :--------------------------- | :---------------- | :------------------------------------------- |
-| **GET** | `/`          | `Home::index`                | `v_home.php`      | Halaman beranda dengan menu navigasi.        |
-| **GET** | `/produk`    | `ProdukController::index`    | `v_produk.php`    | Menampilkan daftar produk aplikasi.          |
-| **GET** | `/keranjang` | `TransaksiController::index` | `v_keranjang.php` | Halaman untuk mengelola transaksi/keranjang. |
+| Method  | Endpoint     | Controller                   | View              | Deskripsi                           |
+| :------ | :----------- | :--------------------------- | :---------------- | :---------------------------------- |
+| **GET** | `/`          | `Home::index`                | `v_home.php`      | Dashboard utama aplikasi.           |
+| **GET** | `/login`     | `AuthController::login`      | `v_login.php`     | Halaman login (Layout Clear).       |
+| **GET** | `/produk`    | `ProdukController::index`    | `v_produk.php`    | Manajemen daftar produk.            |
+| **GET** | `/keranjang` | `TransaksiController::index` | `v_keranjang.php` | Halaman kelola transaksi/keranjang. |
 
 ---
 
 ## 📂 Struktur Penting Proyek
 
-Berikut adalah file-file kunci yang telah diimplementasikan dalam tahap awal ini:
-
-- `app/Config/Routes.php`: Pengaturan alur URL aplikasi.
-- `app/Controllers/`: Logika pemrosesan data (Produk & Transaksi).
-- `app/Views/`: Template tampilan antarmuka (Home, Produk, Keranjang).
-- `composer.json`: Manajemen dependensi framework.
+- `app/Views/layout.php`: Master template utama aplikasi.
+- `app/Views/layout_clear.php`: Template minimalis tanpa sidebar (untuk Auth).
+- `app/Views/components/`: Folder berisi potongan UI (Header, Sidebar, Footer).
+- `public/NiceAdmin/`: Asset template static (CSS, JS, Vendor).
 
 ---
 
 ## 🚀 Panduan Instalasi
 
-Pastikan perangkat Anda sudah terpasang PHP ^8.2 dan Composer.
-
 1.  **Clone Repositori**
 
     ```bash
-    git clone https://github.com/Chqrety/learn-ci.git
+    git clone [https://github.com/Chqrety/learn-ci.git](https://github.com/Chqrety/learn-ci.git)
     cd learn-ci
     ```
 
@@ -71,19 +70,18 @@ Pastikan perangkat Anda sudah terpasang PHP ^8.2 dan Composer.
 
     ```bash
     cp env .env
+    # Ubah CI_ENVIRONMENT ke development di file .env
     ```
 
 4.  **Menjalankan Server Lokal**
     ```bash
     php spark serve
     ```
-    Buka browser dan akses: `http://localhost:8080`
+    Akses aplikasi di: `http://localhost:8080`
 
 ---
 
-> [!NOTE]
-> Pastikan konfigurasi pada **Materi 3 slide 12 - 14** sudah diterapkan sepenuhnya sebelum melanjutkan ke tahap pengembangan database.
-
----
+> [!TIP]
+> Jika tampilan elemen datatables (search bar atau dropdown) terlihat polos, pastikan file CSS di `public/NiceAdmin/assets/vendor/simple-datatables/style.css` sudah ter-load dengan benar (Status 200 OK di Network Tab).
 
 © 2026 - Husnul Fikri Averus
