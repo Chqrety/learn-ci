@@ -14,16 +14,21 @@ Proyek ini adalah tahap **Capstone 4** untuk mata kuliah Pemrograman Web Lanjut.
 - **Nama:** Husnul Fikri Averus
 - **Institusi:** Universitas Dian Nuswantoro (UDINUS)
 - **Program Studi:** Teknik Informatika
-- **Role:** Creative Media @ GDGoC UDINUS | Kandidat Ketum Doscom 26/27
+- **Tujuan:** Implementasi Konsep MVC dan PHP Framework.
 
 ---
 
 ## 🛠️ Fitur Utama (Capstone 4 Update)
 
 - **Master Layouting:** Menggunakan `renderSection` dan `include` untuk memisahkan komponen _Header_, _Sidebar_, dan _Footer_.
-- **Multi-Layout System:** \* `layout.php`: Untuk halaman dashboard/utama (dengan navigasi).
+- **Multi-Layout System:**
+  - `layout.php`: Untuk halaman dashboard/utama (dengan navigasi).
   - `layout_clear.php`: Khusus halaman autentikasi (Login/Register).
-- **Authentication UI:** Implementasi halaman login yang terintegrasi dengan template NiceAdmin.
+- **Authentication System:**
+  - Implementasi login dengan validasi username & password.
+  - Session management untuk menyimpan data user (username, role).
+  - Logout functionality untuk menghancurkan session.
+  - Dynamic profile display di header menampilkan username & role yang sedang login.
 - **Dynamic Title:** Penamaan title halaman otomatis berdasarkan segmen URL menggunakan `uri_string()`.
 - **Datatables Integration:** Implementasi tabel dinamis dengan fitur _search_ dan _paging_ yang sudah ter-styling.
 
@@ -33,12 +38,14 @@ Proyek ini adalah tahap **Capstone 4** untuk mata kuliah Pemrograman Web Lanjut.
 
 Aplikasi telah dikonfigurasi dengan rute-rute berikut:
 
-| Method  | Endpoint     | Controller                   | View              | Deskripsi                           |
-| :------ | :----------- | :--------------------------- | :---------------- | :---------------------------------- |
-| **GET** | `/`          | `Home::index`                | `v_home.php`      | Dashboard utama aplikasi.           |
-| **GET** | `/login`     | `AuthController::login`      | `v_login.php`     | Halaman login (Layout Clear).       |
-| **GET** | `/produk`    | `ProdukController::index`    | `v_produk.php`    | Manajemen daftar produk.            |
-| **GET** | `/keranjang` | `TransaksiController::index` | `v_keranjang.php` | Halaman kelola transaksi/keranjang. |
+| Method   | Endpoint     | Controller                   | View              | Deskripsi                           |
+| :------- | :----------- | :--------------------------- | :---------------- | :---------------------------------- |
+| **GET**  | `/`          | `Home::index`                | `v_home.php`      | Dashboard utama aplikasi.           |
+| **GET**  | `/login`     | `AuthController::login`      | `v_login.php`     | Halaman login (Layout Clear).       |
+| **POST** | `/login`     | `AuthController::login`      | -                 | Proses validasi login.              |
+| **GET**  | `/logout`    | `AuthController::logout`     | -                 | Keluar dari session & redirect.     |
+| **GET**  | `/produk`    | `ProdukController::index`    | `v_produk.php`    | Manajemen daftar produk.            |
+| **GET**  | `/keranjang` | `TransaksiController::index` | `v_keranjang.php` | Halaman kelola transaksi/keranjang. |
 
 ---
 
@@ -74,10 +81,33 @@ Aplikasi telah dikonfigurasi dengan rute-rute berikut:
     ```
 
 4.  **Menjalankan Server Lokal**
+
     ```bash
     php spark serve
     ```
+
     Akses aplikasi di: `http://localhost:8080`
+
+5.  **Login ke Aplikasi**
+    - Username: `april`
+    - Password: `123`
+
+---
+
+## 🔐 Sistem Autentikasi
+
+Fitur login & logout sudah terimplementasi. Pengguna harus login terlebih dahulu sebelum mengakses halaman utama. Informasi yang tersimpan dalam session:
+
+```php
+session()->set([
+    'username' => 'april',      // Username user yang login
+    'role' => 'admin',          // Role/level akses pengguna
+    'isLoggedIn' => TRUE        // Status login
+]);
+```
+
+> [!NOTE]
+> Saat ini menggunakan hardcoded credentials untuk demo. Untuk production, integrasi dengan database dan password hashing yang lebih aman (bcrypt/argon2) sangat direkomendasikan.
 
 ---
 
