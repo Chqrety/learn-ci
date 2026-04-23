@@ -29,6 +29,13 @@ Proyek ini adalah tahap **Capstone 4** untuk mata kuliah Pemrograman Web Lanjut.
   - Session management untuk menyimpan data user (username, role).
   - Logout functionality untuk menghancurkan session.
   - Dynamic profile display di header menampilkan username & role yang sedang login.
+- **Route Protection dengan Auth Filter:**
+  - Halaman `/`, `/produk`, `/keranjang` dilindungi dengan filter `auth`.
+  - Pengguna yang belum login otomatis di-redirect ke halaman login.
+  - Implementasi di `app/Filters/Auth.php`.
+- **Role-Based Authorization:**
+  - Menu Produk hanya muncul untuk user dengan role `admin`.
+  - Conditional rendering di sidebar berdasarkan session role.
 - **Dynamic Title:** Penamaan title halaman otomatis berdasarkan segmen URL menggunakan `uri_string()`.
 - **Datatables Integration:** Implementasi tabel dinamis dengan fitur _search_ dan _paging_ yang sudah ter-styling.
 
@@ -38,23 +45,48 @@ Proyek ini adalah tahap **Capstone 4** untuk mata kuliah Pemrograman Web Lanjut.
 
 Aplikasi telah dikonfigurasi dengan rute-rute berikut:
 
-| Method   | Endpoint     | Controller                   | View              | Deskripsi                           |
-| :------- | :----------- | :--------------------------- | :---------------- | :---------------------------------- |
-| **GET**  | `/`          | `Home::index`                | `v_home.php`      | Dashboard utama aplikasi.           |
-| **GET**  | `/login`     | `AuthController::login`      | `v_login.php`     | Halaman login (Layout Clear).       |
-| **POST** | `/login`     | `AuthController::login`      | -                 | Proses validasi login.              |
-| **GET**  | `/logout`    | `AuthController::logout`     | -                 | Keluar dari session & redirect.     |
-| **GET**  | `/produk`    | `ProdukController::index`    | `v_produk.php`    | Manajemen daftar produk.            |
-| **GET**  | `/keranjang` | `TransaksiController::index` | `v_keranjang.php` | Halaman kelola transaksi/keranjang. |
+| Method   | Endpoint     | Controller                   | View              | Filter | Deskripsi                           |
+| :------- | :----------- | :--------------------------- | :---------------- | :----: | :---------------------------------- |
+| **GET**  | `/`          | `Home::index`                | `v_home.php`      |  auth  | Dashboard utama aplikasi.           |
+| **GET**  | `/login`     | `AuthController::login`      | `v_login.php`     |   -    | Halaman login (Layout Clear).       |
+| **POST** | `/login`     | `AuthController::login`      | -                 |   -    | Proses validasi login.              |
+| **GET**  | `/logout`    | `AuthController::logout`     | -                 |   -    | Keluar dari session & redirect.     |
+| **GET**  | `/produk`    | `ProdukController::index`    | `v_produk.php`    |  auth  | Manajemen daftar produk (admin).    |
+| **GET**  | `/keranjang` | `TransaksiController::index` | `v_keranjang.php` |  auth  | Halaman kelola transaksi/keranjang. |
 
 ---
 
 ## 📂 Struktur Penting Proyek
 
-- `app/Views/layout.php`: Master template utama aplikasi.
-- `app/Views/layout_clear.php`: Template minimalis tanpa sidebar (untuk Auth).
-- `app/Views/components/`: Folder berisi potongan UI (Header, Sidebar, Footer).
-- `public/NiceAdmin/`: Asset template static (CSS, JS, Vendor).
+### View & Template
+
+```
+app/Views/
+├── layout.php              # Master template utama (dengan navigasi)
+├── layout_clear.php        # Template minimalis (untuk halaman login)
+├── v_home.php              # Halaman dashboard
+├── v_login.php             # Halaman login
+├── v_produk.php            # Halaman manajemen produk
+├── v_keranjang.php         # Halaman transaksi/keranjang
+├── welcome_message.php     # Welcome page
+├── components/
+│   ├── header.php          # Header dengan navbar & profil user
+│   ├── sidebar.php         # Sidebar dengan navigasi menu (role-based)
+│   └── footer.php          # Footer aplikasi
+├── errors/                 # Error pages
+│   ├── cli/                # Error pages untuk CLI
+│   └── html/               # Error pages untuk HTTP
+└── styles/
+    └── style.css           # Custom CSS aplikasi
+```
+
+### Asset & Konfigurasi
+
+- `public/NiceAdmin/`: Template asset static (CSS, JS, Vendor dependencies)
+- `app/Config/`: Konfigurasi aplikasi (Routes, Filters, Database, dll)
+- `app/Controllers/`: Business logic handlers
+- `app/Models/`: Data models & queries
+- `app/Filters/`: Custom filters (Auth filter)
 
 ---
 
@@ -108,6 +140,43 @@ session()->set([
 
 > [!NOTE]
 > Saat ini menggunakan hardcoded credentials untuk demo. Untuk production, integrasi dengan database dan password hashing yang lebih aman (bcrypt/argon2) sangat direkomendasikan.
+
+---
+
+## 🔒 Route Protection & Authorization
+
+### Auth Filter
+
+Filter `auth` digunakan untuk melindungi route-route tertentu agar hanya bisa diakses oleh user yang sudah login:
+
+```php
+// app/Config/Routes.php
+$routes->get('/', 'Home::index', ['filter' => 'auth']);
+$routes->get('produk', 'ProdukController::index', ['filter' => 'auth']);
+$routes->get('keranjang', 'TransaksiController::index', ['filter' => 'auth']);
+```
+
+Implementasi filter ada di `app/Filters/Auth.php`:
+
+- Mengecek apakah session `isLoggedIn` ada
+- Jika tidak, user otomatis di-redirect ke halaman login
+
+### Role-Based Menu (RBAC)
+
+Menu di sidebar disesuaikan berdasarkan role user:
+
+```php
+// app/Views/components/sidebar.php
+<?php if (session()->get('role') == 'admin') { ?>
+    <!-- Menu Produk hanya untuk admin -->
+    <li class="nav-item">
+        <a class="nav-link" href="produk">
+            <i class="bi bi-receipt"></i>
+            <span>Produk</span>
+        </a>
+    </li>
+<?php } ?>
+```
 
 ---
 
