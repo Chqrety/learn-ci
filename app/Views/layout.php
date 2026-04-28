@@ -12,7 +12,7 @@ if (uri_string() != "") {
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>- Toko -
+  <title>Chqrety Shop -
     <?php echo $hlm ?>
   </title>
   <meta content="" name="description">
