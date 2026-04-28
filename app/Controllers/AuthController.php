@@ -18,13 +18,15 @@ class AuthController extends BaseController
             $username = $this->request->getVar('username');
             $password = $this->request->getVar('password');
 
-            $dataUser = ['username' => 'april', 'password' => '202cb962ac59075b964b07152d234b70', 'role' => 'admin']; // passw 123
+            $dataUser = ['username' => 'husnul', 'email' => '111202415776@udinus.ac.id', 'password' => '202cb962ac59075b964b07152d234b70', 'role' => 'admin']; // passw 123
 
             if ($username == $dataUser['username']) {
                 if (md5($password) == $dataUser['password']) {
                     session()->set([
                         'username' => $dataUser['username'],
+                        'email' => $dataUser['email'],
                         'role' => $dataUser['role'],
+                        'login_time' => date('d F Y, H:i:s'),
                         'isLoggedIn' => TRUE
                     ]);
 

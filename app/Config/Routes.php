@@ -13,6 +13,7 @@ $routes->get('logout', 'AuthController::logout');
 
 $routes->get('produk', 'ProdukController::index', ['filter' => 'auth']);
 $routes->get('keranjang', 'TransaksiController::index', ['filter' => 'auth']);
+$routes->get('profile', 'UserController::profile', ['filter' => 'auth']);
 
 $routes->get('/layout', 'Home::layout');
 // $routes->post('products', 'Product::feature');
