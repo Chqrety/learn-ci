@@ -1,5 +1,6 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
+<!-- Table with stripped rows -->
 <?php
 if (session()->getFlashData('success')) {
   ?>
@@ -23,7 +24,6 @@ if (session()->getFlashData('failed')) {
 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
   Tambah Data
 </button>
-<!-- Table with stripped rows -->
 <table class="table datatable">
   <thead>
     <tr>
@@ -48,7 +48,14 @@ if (session()->getFlashData('failed')) {
           <?php endif; ?>
         </td>
         <td>
-          aksi
+          <button type="button" class="btn btn-success" data-bs-toggle="modal"
+            data-bs-target="#editModal-<?= $produk['id'] ?>">
+            Ubah
+          </button>
+          <a href="<?= base_url('produk/delete/' . $produk['id']) ?>" class="btn btn-danger"
+            onclick="return confirm('Yakin hapus data ini ?')">
+            Hapus
+          </a>
         </td>
       </tr>
     <?php endforeach ?>
@@ -57,5 +64,6 @@ if (session()->getFlashData('failed')) {
 <!-- End Table with stripped rows -->
 
 <?= $this->include('produk/modal_add') ?>
+<?= $this->include('produk/modal_edit') ?>
 
 <?= $this->endSection() ?>
