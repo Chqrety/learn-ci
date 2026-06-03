@@ -12,6 +12,7 @@ class ProdukController extends BaseController
 
     function __construct()
     {
+        helper('form');
         $this->productModel = new ProductModel();
     }
 
@@ -19,10 +20,17 @@ class ProdukController extends BaseController
     fungsi dibawah ini yang bertanggung jawab untuk
     menangani request dari http://localhost:8080/produk/edit/23
     */
-    public function edit($id)
+
+    public function index()
     {
-        //pada fungsi harus diberi variable untuk menerima value dari parameter
-        //contohnya menggunakan variable $id
+        return view('produk/index', [
+            'products' => $this->productModel->findAll()
+        ]);
+    }
+
+    public function create()
+    {
+        $dataFoto = $this->request->getFile('foto');
 
         $dataForm = [
             'nama' => $this->request->getPost('nama'),
@@ -30,13 +38,53 @@ class ProdukController extends BaseController
             'jumlah' => $this->request->getPost('jumlah')
         ];
 
-        $this->productModel->update($id, $dataForm);
+        if ($dataFoto->isValid()) {
+            $fileName = $dataFoto->getRandomName();
+            $dataFoto->move('img/', $fileName);
+
+            $dataForm['foto'] = $fileName;
+        }
+
+        $this->productModel->insert($dataForm);
+
+        return redirect('produk')->with('success', 'Data Berhasil Ditambah');
     }
 
-    public function index()
+    public function edit($id)
     {
-        return view('produk/index', [
-            'products' => $this->productModel->findAll()
-        ]);
+        $dataProduk = $this->productModel->find($id);
+
+        $dataForm = [
+            'nama' => $this->request->getPost('nama'),
+            'harga' => $this->request->getPost('harga'),
+            'jumlah' => $this->request->getPost('jumlah')
+        ];
+
+        if ($this->request->getPost('check') == 1) {
+            if ($dataProduk['foto'] != '' and file_exists("img/" . $dataProduk['foto'] . "")) {
+                unlink("img/" . $dataProduk['foto']);
+            }
+
+            $dataFoto = $this->request->getFile('foto');
+
+            if ($dataFoto->isValid()) {
+                $fileName = $dataFoto->getRandomName();
+                $dataFoto->move('img/', $fileName);
+
+                $dataForm['foto'] = $fileName;
+            }
+        }
+
+        $this->productModel->update($id, $dataForm);
+
+        return redirect('produk')->with('success', 'Data Berhasil Diubah');
+    }
+
+    public function delete($id)
+    {
+        $dataProduk = $this->productModel->find($id);
+        $this->productModel->delete($id);
+
+        return redirect('produk')->with('success', 'Data Berhasil Dihapus');
     }
 }
