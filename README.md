@@ -3,12 +3,12 @@
 ![CodeIgniter](https://img.shields.io/badge/Framework-CodeIgniter_4.5-EF4423?style=for-the-badge&logo=codeigniter&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/UI_Theme-NiceAdmin-5f3fef?style=for-the-badge&logo=bootstrap&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Capstone_10_Completed-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Capstone_11_Completed-green?style=for-the-badge)
 
-Proyek ini adalah implementasi tugas UTS untuk mata kuliah Pemrograman Web Lanjut menggunakan CodeIgniter 4, template NiceAdmin, autentikasi berbasis database, manajemen keranjang, checkout, dan integrasi ongkir RajaOngkir.
+Proyek ini adalah implementasi tugas UTS untuk mata kuliah Pemrograman Web Lanjut menggunakan CodeIgniter 4, template NiceAdmin, autentikasi berbasis database, manajemen keranjang, checkout, integrasi ongkir RajaOngkir, API produk/transaksi, dan history pembelian.
 
 > [!NOTE]
-> README ini mengikuti kondisi aplikasi terbaru di repository yang sudah memakai Migrations, Seeders, route protection, serta endpoint AJAX untuk destinasi dan ongkir.
+> README ini mengikuti kondisi aplikasi terbaru di repository yang sudah memakai Migrations, Seeders, route protection, endpoint AJAX, serta endpoint API untuk produk dan transaksi.
 
 > [!TIP]
 > Setelah login, sidebar, header, profile, dan title halaman akan berubah secara dinamis sesuai route aktif dan role pengguna.
@@ -25,6 +25,8 @@ Proyek ini adalah implementasi tugas UTS untuk mata kuliah Pemrograman Web Lanju
 - Manajemen keranjang: tambah, edit, hapus item, dan kosongkan keranjang.
 - Checkout dengan perhitungan ongkir dari RajaOngkir.
 - Endpoint AJAX untuk pencarian destinasi dan biaya pengiriman.
+- API resource untuk produk dan transaksi.
+- Halaman history untuk melihat transaksi pembelian beserta detail item dan ongkir.
 - Layout terpisah untuk halaman utama dan halaman login.
 - Dynamic page title berdasarkan URI aktif.
 
@@ -60,8 +62,11 @@ Login demo digenerate otomatis melalui `UserSeeder`.
 | GET    | `/keranjang/clear`          | `TransaksiController::cart_clear`   |  auth  | Kosongkan keranjang                   |
 | GET    | `/checkout`                 | `TransaksiController::checkout`     |  auth  | Halaman checkout                      |
 | POST   | `/buy`                      | `TransaksiController::buy`          |  auth  | Simpan transaksi pembelian            |
+| GET    | `/history`                  | `TransaksiController::history`      |  auth  | Riwayat transaksi pembelian           |
 | GET    | `/ajax/destinations`        | `TransaksiController::destinations` |  auth  | Cari destinasi RajaOngkir             |
 | GET    | `/ajax/costs`               | `TransaksiController::costs`        |  auth  | Ambil biaya pengiriman RajaOngkir     |
+| GET    | `/api/products`             | `Api\ProdukController`              |   -    | Endpoint API resource produk          |
+| GET    | `/api/transactions`         | `Api\TransaksiController`           |   -    | Endpoint API transaksi                |
 | GET    | `/layout`                   | `Home::layout`                      |   -    | View layout untuk pengecekan tampilan |
 
 ## Struktur Penting
@@ -77,7 +82,10 @@ app/
 │   ├── Home.php
 │   ├── ProdukController.php
 │   ├── TransaksiController.php
-│   └── UserController.php
+│   ├── UserController.php
+│   └── api/
+│       ├── ProdukController.php
+│       └── TransaksiController.php
 ├── Database/
 │   ├── Migrations/
 │   │   ├── 2026-05-12-095313_User.php
@@ -97,22 +105,23 @@ app/
 ├── Services/
 │   └── RajaOngkirService.php
 └── Views/
-    ├── layout.php
-    ├── layout_clear.php
-    ├── v_home.php
-    ├── v_login.php
-    ├── v_produk.php
-    ├── v_keranjang.php
-    ├── v_checkout.php
-    ├── v_profile.php
-    ├── welcome_message.php
-    ├── components/
-    │   ├── header.php
-    │   ├── sidebar.php
-    │   └── footer.php
-    ├── errors/
-    └── styles/
-        └── style.css
+   ├── layout.php
+   ├── layout_clear.php
+   ├── v_home.php
+   ├── v_login.php
+   ├── v_produk.php
+   ├── v_keranjang.php
+   ├── v_checkout.php
+   ├── v_history.php
+   ├── v_profile.php
+   ├── welcome_message.php
+   ├── components/
+   │   ├── header.php
+   │   ├── sidebar.php
+   │   └── footer.php
+   ├── errors/
+   └── styles/
+      └── style.css
 ```
 
 ## Cara Menjalankan
@@ -158,5 +167,6 @@ app/
 - Sidebar memeriksa `session()->get('role')` untuk menampilkan menu Produk hanya kepada admin.
 - Checkout menggunakan `app/Services/RajaOngkirService.php` untuk mengambil destinasi dan biaya kirim.
 - Transaksi disimpan ke tabel transaksi dan detail transaksi melalui `TransactionModel` dan `TransactionDetailModel`.
+- Halaman history membaca transaksi berdasarkan username session dan menampilkan detail item per pembelian.
 
 © 2026 - Husnul Fikri Averus

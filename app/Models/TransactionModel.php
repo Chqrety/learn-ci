@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class TransactionModel extends Model
 {
-    protected $table = 'transactions';
+    protected $table = 'transaction';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
@@ -30,7 +30,7 @@ class TransactionModel extends Model
     // Validation
     protected $validationRules = [];
     protected $validationMessages = [];
-    protected $skipValidation = false;
+    protected $skipValidation = true;
     protected $cleanValidationRules = true;
 
     // Callbacks

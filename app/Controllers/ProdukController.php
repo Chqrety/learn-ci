@@ -5,55 +5,56 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\ProductModel;
 use Dompdf\Dompdf;
-use CodeIgniter\HTTP\ResponseInterface;
 
 class ProdukController extends BaseController
 {
-    protected $productModel;
+    protected $model;
 
-    function __construct()
+    public function __construct()
     {
-        helper('form');
-        $this->productModel = new ProductModel();
+        $this->model = new ProductModel();
     }
-
-    /*
-    fungsi dibawah ini yang bertanggung jawab untuk
-    menangani request dari http://localhost:8080/produk/edit/23
-    */
 
     public function index()
     {
-        return view('produk/index', [
-            'products' => $this->productModel->findAll()
-        ]);
+        helper(['form', 'url']);
+
+        $data = [
+            'products' => $this->model->findAll()
+        ];
+
+        return view('produk/index', $data);
     }
 
     public function create()
     {
         $dataFoto = $this->request->getFile('foto');
 
-        $dataForm = [
+        $data = [
             'nama' => $this->request->getPost('nama'),
             'harga' => $this->request->getPost('harga'),
             'jumlah' => $this->request->getPost('jumlah')
         ];
 
-        if ($dataFoto->isValid()) {
+        if ($dataFoto && $dataFoto->isValid()) {
             $fileName = $dataFoto->getRandomName();
             $dataFoto->move('img/', $fileName);
 
-            $dataForm['foto'] = $fileName;
+            $data['foto'] = $fileName;
         }
 
-        $this->productModel->insert($dataForm);
+        $this->model->insert($data);
 
-        return redirect('produk')->with('success', 'Data Berhasil Ditambah');
+        return redirect()->to(base_url('produk'))->with('success', 'Data Berhasil Ditambah');
     }
 
-    public function edit($id)
+    public function edit($id = null)
     {
-        $dataProduk = $this->productModel->find($id);
+        $dataProduk = $this->model->find($id);
+
+        if (!$dataProduk) {
+            return redirect()->to(base_url('produk'))->with('failed', 'Produk tidak ditemukan');
+        }
 
         $dataForm = [
             'nama' => $this->request->getPost('nama'),
@@ -76,45 +77,38 @@ class ProdukController extends BaseController
             }
         }
 
-        $this->productModel->update($id, $dataForm);
+        $this->model->update($id, $dataForm);
 
-        return redirect('produk')->with('success', 'Data Berhasil Diubah');
+        return redirect()->to(base_url('produk'))->with('success', 'Data Berhasil Diubah');
     }
 
-    public function delete($id)
+    public function delete($id = null)
     {
-        $dataProduk = $this->productModel->find($id);
-        $this->productModel->delete($id);
+        $dataProduk = $this->model->find($id);
 
-        return redirect('produk')->with('success', 'Data Berhasil Dihapus');
+        if (!$dataProduk) {
+            return redirect()->to(base_url('produk'))->with('failed', 'Produk tidak ditemukan');
+        }
+
+        $this->model->delete($id);
+
+        return redirect()->to(base_url('produk'))->with('success', 'Data Berhasil Dihapus');
     }
 
     public function download()
     {
-        // Ambil data produk dari database
-        $products = $this->productModel->findAll();
+        $products = $this->model->findAll();
 
-        // Render view menjadi HTML
         $html = view('produk/download_pdf', [
             'products' => $products
         ]);
 
-        // Nama file PDF
         $filename = date('Y-m-d-H-i-s') . '-produk.pdf';
 
-        // Inisialisasi Dompdf
         $dompdf = new Dompdf();
-
-        // Load HTML ke Dompdf
         $dompdf->loadHtml($html);
-
-        // Setting ukuran kertas dan orientasi
         $dompdf->setPaper('A4', 'portrait');
-
-        // Generate PDF
         $dompdf->render();
-
-        // Download / tampilkan PDF
         $dompdf->stream($filename, [
             'Attachment' => true
         ]);
