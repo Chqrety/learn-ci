@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class TransactionDetailModel extends Model
 {
-    protected $table = 'transactiondetails';
+    protected $table = 'transaction_detail';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
@@ -21,7 +21,7 @@ class TransactionDetailModel extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = false;
+    protected $useTimestamps = true;
     protected $dateFormat = 'datetime';
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
@@ -43,4 +43,24 @@ class TransactionDetailModel extends Model
     protected $afterFind = [];
     protected $beforeDelete = [];
     protected $afterDelete = [];
+
+    public function getProductsByTransactionIds(array $transactionIds)
+    {
+        if (empty($transactionIds)) {
+            return [];
+        }
+
+        $details = $this->select('transaction_detail.*, product.nama, product.harga, product.foto')
+            ->join('product', 'transaction_detail.product_id = product.id')
+            ->whereIn('transaction_id', $transactionIds)
+            ->findAll();
+
+        $products = [];
+
+        foreach ($details as $detail) {
+            $products[$detail['transaction_id']][] = $detail;
+        }
+
+        return $products;
+    }
 }

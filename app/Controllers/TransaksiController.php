@@ -3,10 +3,10 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use App\Services\RajaOngkirService;
-use App\Models\TransactionDetailModel;
-use App\Models\TransactionModel;
 use CodeIgniter\HTTP\ResponseInterface;
+use App\Services\RajaOngkirService;
+use App\Models\TransactionModel;
+use App\Models\TransactionDetailModel;
 
 class TransaksiController extends BaseController
 {
@@ -47,7 +47,7 @@ class TransaksiController extends BaseController
         session()->setFlashdata(
             'success',
             'Produk berhasil ditambahkan ke keranjang.
-	    <a href="' . base_url('keranjang') . '">Lihat</a>'
+            <a href="' . base_url('keranjang') . '">Lihat</a>'
         );
 
         return redirect()->to(base_url('/'));
@@ -162,7 +162,6 @@ class TransaksiController extends BaseController
             return redirect()->back();
         }
 
-
         $db = \Config\Database::connect();
         $db->transStart();
 
@@ -184,6 +183,7 @@ class TransaksiController extends BaseController
         // insert transaction
         if (!$this->transactionModel->insert($transaction)) {
             $db->transRollback();
+
             return redirect()->back()->with('error', 'Gagal membuat transaksi');
         }
 
@@ -206,9 +206,27 @@ class TransaksiController extends BaseController
             return redirect()->back()->with('error', 'Gagal membuat transaksi');
         }
 
-        //hapus session keranjang belanja
+        // hapus session keranjang belanja
         $this->cart->destroy();
+
         return redirect()->to(base_url());
     }
 
+    public function history()
+    {
+        $username = session()->get('username');
+
+        $transactions = $this->transactionModel->where('username', $username)->findAll();
+        $transactionIds = array_column($transactions, 'id');
+
+        $products = $this->transactionDetailModel->getProductsByTransactionIds($transactionIds);
+
+        $data = [
+            'username' => $username,
+            'transactions' => $transactions,
+            'products' => $products
+        ];
+
+        return view('v_history', $data);
+    }
 }
