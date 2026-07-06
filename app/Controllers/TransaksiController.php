@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\ProductModel;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Services\RajaOngkirService;
 use App\Models\TransactionModel;
@@ -111,6 +112,19 @@ class TransaksiController extends BaseController
     {
         $search = $this->request->getGet('q');
 
+        // 1. Buat key cache unik berdasarkan keyword pencarian (lowercase + md5)
+        $searchKey = !empty($search) ? strtolower(trim($search)) : 'all';
+        $cacheKey = 'cache_dest_' . md5($searchKey);
+
+        // 2. Cek apakah hasil olahan data keyword ini sudah ada di cache lokal
+        if ($cachedResults = cache($cacheKey)) {
+            // Jika ada, langsung return data dari cache (0 kuota API terpakai!)
+            return $this->response->setJSON([
+                'results' => $cachedResults
+            ]);
+        }
+
+        // 3. Jika tidak ada di cache, jalankan service API aslimu
         $service = new RajaOngkirService();
         $response = $service->getDestination($search);
 
@@ -124,6 +138,12 @@ class TransaksiController extends BaseController
             ];
         }
 
+        // 4. Simpan hasil array $results yang sudah bersih ke cache selama 30 hari (2592000 detik)
+        if (!empty($results)) {
+            cache()->save($cacheKey, $results, 2592000);
+        }
+
+        // 5. Kembalikan respon JSON ke frontend Select2
         return $this->response->setJSON([
             'results' => $results
         ]);
@@ -156,60 +176,95 @@ class TransaksiController extends BaseController
 
     public function buy()
     {
-        $cartItems = $this->cart->contents();
+        // Load helper transaksi
+        helper('TransaksiHelper');
 
-        if (empty($cartItems)) {
-            return redirect()->back();
+        $transactionModel = new TransactionModel();
+        $transactionDetailModel = new TransactionDetailModel();
+        $productModel = new ProductModel();
+
+        // 1. Ambil session menggunakan key 'cart_contents' sesuai hasil debug
+        $cart_contents = session()->get('cart_contents') ?? [];
+        if (empty($cart_contents)) {
+            return redirect()->to('keranjang')->with('error', 'Keranjang kosong.');
         }
 
+        // 2. Hitung total_harga berdasarkan properti 'price' dan 'qty'
+        $total_harga = 0;
+        foreach ($cart_contents as $key => $item) {
+            // Skip key pembantu seperti 'cart_total' atau 'total_items' jika ada di dalam array
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $price = $item['price'] ?? 0;
+            $qty = $item['qty'] ?? 0;
+            $total_harga += $price * $qty;
+        }
+
+        $voucher_code = $this->request->getPost('voucher_code');
+        $ongkir = $this->request->getPost('ongkir') ?? 0;
+
+        // Hitung komponen biaya tambahan via helper
+        $diskon_voucher = hitung_diskon_voucher($total_harga, $voucher_code);
+        $ppn = hitung_ppn($total_harga);
+        $biaya_admin = hitung_biaya_admin($total_harga);
+
+        // Hitung hasil grand total akhir
+        $subtotal_akhir = $total_harga - $diskon_voucher + $ppn + $biaya_admin;
+        $grand_total = $subtotal_akhir + $ongkir;
+
+        // Siapkan data transaksi untuk database
+        $data_transaction = [
+            'username' => session()->get('username'),
+            'total_harga' => $total_harga,
+            'ongkir' => $ongkir,
+            'status' => 'pending',
+            'ppn' => $ppn,
+            'biaya_admin' => $biaya_admin,
+            'voucher_code' => !empty($voucher_code) ? strtoupper(trim($voucher_code)) : null,
+            'diskon_voucher' => $diskon_voucher,
+            'grand_total' => $grand_total
+        ];
+
+        // Proses simpan data menggunakan database transaction
         $db = \Config\Database::connect();
         $db->transStart();
 
-        $subtotal = 0;
-        foreach ($cartItems as $item) {
-            $subtotal += $item['qty'] * $item['price'];
-        }
+        $transactionModel->insert($data_transaction);
+        $transaction_id = $transactionModel->getInsertID();
 
-        $ongkir = (int) $this->request->getPost('ongkir');
+        foreach ($cart_contents as $key => $item) {
+            if (!is_array($item)) {
+                continue;
+            }
 
-        $transaction = [
-            'username' => $this->request->getPost('username'),
-            'alamat' => $this->request->getPost('alamat'),
-            'ongkir' => $ongkir,
-            'total_harga' => $subtotal + $ongkir,
-            'status' => 0,
-        ];
-
-        // insert transaction
-        if (!$this->transactionModel->insert($transaction)) {
-            $db->transRollback();
-
-            return redirect()->back()->with('error', 'Gagal membuat transaksi');
-        }
-
-        $transactionId = $this->transactionModel->getInsertID();
-
-        // insert transaction detail
-        foreach ($cartItems as $item) {
-            $this->transactionDetailModel->insert([
-                'transaction_id' => $transactionId,
+            $transactionDetailModel->insert([
+                'transaction_id' => $transaction_id,
                 'product_id' => $item['id'],
                 'jumlah' => $item['qty'],
-                'diskon' => 0,
-                'subtotal_harga' => $item['qty'] * $item['price']
+                'sub_total' => $item['subtotal'],
             ]);
+
+            // Potong stok produk
+            $product = $productModel->find($item['id']);
+            if ($product) {
+                $productModel->update($item['id'], [
+                    'stok' => $product['stok'] - $item['qty']
+                ]);
+            }
         }
 
         $db->transComplete();
 
-        if (!$db->transStatus()) {
-            return redirect()->back()->with('error', 'Gagal membuat transaksi');
+        if ($db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Gagal memproses transaksi.');
         }
 
-        // hapus session keranjang belanja
-        $this->cart->destroy();
+        // Bersihkan session keranjang setelah checkout berhasil
+        session()->remove('cart_contents');
 
-        return redirect()->to(base_url());
+        return redirect()->to('history')->with('success', 'Pesanan berhasil dibuat!');
     }
 
     public function history()
